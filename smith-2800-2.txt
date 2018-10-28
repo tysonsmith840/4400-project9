@@ -1,0 +1,235 @@
+	pinging 2800#1 from 2800#2
+
+smith-2800-2#ping 2604:2C00:FFD4:1002::1
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 2604:2C00:FFD4:1002::1, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 0/1/4 ms
+smith-2800-2#
+
+
+
+smith-2800-2#sho ipv6 ospf neighbor 
+
+Neighbor ID     Pri   State           Dead Time   Interface ID    Interface
+74.123.14.152     0   FULL/  -        00:00:37    1016            FastEthernet0/0.48
+smith-2800-2#
+
+
+
+
+
+smith-2800-2#sho run
+Building configuration...
+
+
+Current configuration : 4247 bytes
+!
+! Last configuration change at 23:40:40 MDT Sat Oct 27 2018 by tsmith
+! NVRAM config last updated at 23:55:09 MDT Sat Oct 27 2018 by tsmith
+! NVRAM config last updated at 23:55:09 MDT Sat Oct 27 2018 by tsmith
+version 15.1
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname smith-2800-2
+!
+boot-start-marker
+boot system flash:c2800nm-adventerprisek9-mz.151-4.M12a.bin
+boot-end-marker
+!
+!
+enable secret 5 $1$pjui$YHk7VKVLA6Ld0jqiUKt.i/
+!
+no aaa new-model
+!         
+clock timezone MST -7 0
+clock summer-time MDT recurring
+!
+dot11 syslog
+ip source-route
+!
+!
+ip cef
+!
+!
+!
+no ip domain lookup
+ip domain name tyson4400.tk
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!         
+!
+!
+!
+!
+!
+!
+!
+voice-card 0
+!
+crypto pki token default removal timeout 0
+!
+!
+!
+!
+license udi pid CISCO2811 sn FTX0924A5E4
+username cbl privilege 15 secret 5 $1$ccmS$jcPRTDJ5YSEBaSb9u1jgL0
+username tsmith privilege 15 secret 5 $1$TgiI$VHd7OCMLhUxFLY2m91H1z/
+!
+redundancy
+!
+!         
+ip ssh version 2
+! 
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 74.123.14.154 255.255.255.255
+!
+interface FastEthernet0/0
+ no ip address
+ duplex auto
+ speed auto
+!
+interface FastEthernet0/0.48
+ description 2800#2 to 3560 vlan48
+ encapsulation dot1Q 48
+ ip address 74.123.14.138 255.255.255.252
+ ipv6 address 2604:2C00:FFD4:1001::/64 eui-64
+ ipv6 enable
+ ipv6 ospf network point-to-point
+ ipv6 ospf 65535 area 100
+!
+interface FastEthernet0/1
+ no ip address
+ duplex auto
+ speed auto
+!
+interface FastEthernet0/1.76
+ description 2800#2 vlan 76 goes to 2800#1
+ encapsulation dot1Q 76
+ ip address 74.123.14.150 255.255.255.252
+ ipv6 address 2604:2C00:FFD4:1002::2/64
+!
+interface FastEthernet0/1.930
+ description midterm interface
+ encapsulation dot1Q 930
+ ip address 192.168.130.4 255.255.255.224
+!         
+interface FastEthernet0/1.4019
+ description VM#2 Network
+ encapsulation dot1Q 4019
+ ip address 74.123.14.145 255.255.255.252
+ ip access-group vmACL-in in
+ ip access-group vmACL-out out
+!
+router rip
+ version 2
+ timers basic 30 30 30 45
+ passive-interface FastEthernet0/1.4019
+ network 74.0.0.0
+ no auto-summary
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+!
+ip access-list standard SSH_in
+ permit 209.33.215.102
+ permit 69.129.42.147
+ permit 144.38.192.0 0.0.0.63
+ permit 144.38.0.0 0.0.255.255
+ permit 209.33.250.160 0.0.0.31
+ deny   any
+!
+ip access-list extended vmACL-in
+ permit udp host 74.123.14.146 host 204.17.177.11 eq domain
+ permit udp host 74.123.14.146 host 204.17.177.21 eq domain
+ permit tcp host 74.123.14.146 host 204.17.177.11 eq domain
+ permit tcp host 74.123.14.146 host 204.17.177.21 eq domain
+ deny   tcp host 74.123.14.146 any eq domain
+ deny   udp host 74.123.14.146 any eq domain
+ permit ip any any
+ remark permits vm to only use specific DNS
+ip access-list extended vmACL-out
+ remark permits ssh/ftp/http into the vm from certain addresses
+ permit tcp 144.38.0.0 0.0.255.255 74.123.14.144 0.0.0.3 eq ftp 22 www
+ permit tcp 209.33.192.0 0.0.63.255 74.123.14.144 0.0.0.3 eq ftp 22 www
+ permit tcp host 69.129.42.147 74.123.14.144 0.0.0.3 eq ftp 22 www
+ deny   tcp any 74.123.14.144 0.0.0.3 eq ftp www
+ permit ip any 74.123.14.144 0.0.0.3
+!
+access-list 23 permit 204.17.177.8
+access-list 23 permit 204.17.177.5
+access-list 23 permit 204.17.177.3
+access-list 23 deny   any
+ipv6 router ospf 65535
+!
+!
+!
+!
+!
+!
+!
+control-plane
+!
+!
+!
+!
+mgcp profile default
+!
+!
+!
+!
+!
+banner login ^C
+        
+ ____ ____ ____ ____    ____  __   __ ____    ____ ____ ____ ____     
+(  _ (  __(  __(  _ \__(  _ \/  \ /  (  _ \__(  _ (  __(  __(  _ \    
+ ) _ () _) ) _) ) __(___) _ (  O (  O ) __(___) _ () _) ) _) ) __/    
+(____(____(____(__) _  (____/\__/_\__(__)  __(____(____(____(__) ____ 
+ / __/  \( \/ (  _ / )( (_  _(  __(  _ \  (  ( \/  (  / ___(  __/ ___)
+( (_(  O / \/ \) __) \/ ( )(  ) _) )   /  /    (  O )(\___ \) _)\___ \
+ \___\__/\_)(_(__) \____/(__)(____(__\_)  \_)__)\__(__(____(____(____/
+
+
+
+
+
+
+^C        
+!
+line con 0
+ logging synchronous
+ login local
+line aux 0
+line vty 0 4
+ login local
+ transport input ssh
+line vty 5 15
+ login local
+ transport input ssh
+!
+scheduler allocate 20000 1000
+ntp access-group peer 23
+ntp server 204.17.177.3
+ntp server 204.17.177.8
+ntp server 198.60.22.240
+end
+
+smith-2800-2#  
+
